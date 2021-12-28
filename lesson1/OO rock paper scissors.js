@@ -6,12 +6,12 @@ function createHuman() {
 
   let humanObject = {
     choose() {
-      let choicesString = CHOICES[0]
+      let choicesString = CHOICES[0];
       for (let index = 1; index < CHOICES.length; index += 1) {
         if (index === CHOICES.length - 1) {
-          choicesString += ` or ${CHOICES[index]}`
+          choicesString += ` or ${CHOICES[index]}`;
         } else {
-          choicesString += `, ${CHOICES[index]}`
+          choicesString += `, ${CHOICES[index]}`;
         }
       }
       let choice;
@@ -35,14 +35,14 @@ function createComputer() {
 
   let computerObject = {
     choose() {
-      let thresholds = this.getThresholds()
+      let thresholds = this.getThresholds();
       let randomIndex = Math.random();
       for (let index = 0; index < thresholds.length; index += 1) {
         if (randomIndex < thresholds[index]) {
-          let choice = CHOICES[index]
+          let choice = CHOICES[index];
           this.move = choice;
           this.moveHistory[choice].count += 1;
-          break
+          break;
         }
       }
     },
@@ -52,7 +52,7 @@ function createComputer() {
       const VARIABLEODDS = 0.1;
       let percentages = this.getLossPercentages();
       let weighted = percentages.map(percent => {
-        return DEFAULTODDS - percent * VARIABLEODDS
+        return DEFAULTODDS - (percent * VARIABLEODDS);
       });
       let totalWeighted = weighted.reduce((prev, current) => prev + current, 0);
       let result = 0;
@@ -75,17 +75,11 @@ function createPlayer() {
     score: 0,
     moveHistory: {},
 
-    recordSelection(selection, result) {
-      this.moveHistory[selection].count += 1;
-      if (result === 'loss') {
-        this.moveHistory[selection].losses += 1;
-      }
-    },
-
     getLossPercentages() {
       let result = [];
-      for (let selection of CHOICES) {
-        let percentage = this.moveHistory[selection].losses / this.moveHistory[selection].count || 0;
+      for (let choice of CHOICES) {
+        let percentage = (this.moveHistory[choice].losses /
+                         this.moveHistory[choice].count) || 0;
         result.push(percentage);
       }
       return result;
@@ -126,6 +120,7 @@ const RPSGame = {
       this.displayScore();
       this.human.choose();
       this.computer.choose();
+      this.displayChoices();
       this.determineAndDisplayRoundWinner();
       this.displayGameWinner();
       if (!this.playAgain()) break;
@@ -143,9 +138,9 @@ const RPSGame = {
         loser = 'human';
       } else {
         winner = 'human';
-        loser = 'computer'
+        loser = 'computer';
       }
-      console.log(`The game was won by ${winner} with a score of ${this[winner].score} to ${this[loser].score}`);
+      console.log(`The match was won by ${winner} with a score of ${this[winner].score} to ${this[loser].score}.`);
       this.resetScores();
     }
   },
@@ -157,21 +152,26 @@ const RPSGame = {
 
   playAgain() {
     let selection;
-    const CHOICES_YN = ['y', 'n'];
+    const CHOICES_YN = ['yes', 'no'];
+    const TRUE_INDEX = 0;
     while (true) {
-      console.log('Would you like to play again? (yes/no)');
-      selection = rlsync.question().toLowerCase()[0];
-      if (CHOICES_YN.includes(selection)) return (selection === CHOICES_YN[0]);
+      console.log('\nWould you like to play again? (yes/no)');
+      selection = rlsync.question().toLowerCase();
+      for (let index = 0; index < CHOICES_YN.length; index += 1) {
+        if (CHOICES_YN[index].startsWith(selection)) {
+          return (index === TRUE_INDEX);
+        }
+      }
       console.log('Invalid selection');
     }
   },
 
   didComputerWinGame() {
-    return this.computer.score >= this.maxScore
+    return this.computer.score >= this.maxScore;
   },
 
   didHumanWinGame() {
-    return this.human.score >= this.maxScore
+    return this.human.score >= this.maxScore;
   },
 
 
@@ -187,15 +187,17 @@ const RPSGame = {
   },
 
   displayGoodbyeMessage() {
-    console.log('Thank you for playing Rock, Paper, Scissors, Lizard, Spock! Have a nice day!');
+    console.log('\nThank you for playing Rock, Paper, Scissors, Lizard, Spock! Have a nice day!');
+  },
+
+  displayChoices() {
+    console.log(`\nYou chose: ${this.human.move}`);
+    console.log(`The computer chose: ${this.computer.move} \n`);
   },
 
   determineAndDisplayRoundWinner() {
     let humanMove = this.human.move;
     let computerMove = this.computer.move;
-
-    console.log(`You chose: ${humanMove}`);
-    console.log(`The computer chose: ${computerMove}`);
 
     if (humanMove === computerMove) {
       console.log('This round is a tie!');
