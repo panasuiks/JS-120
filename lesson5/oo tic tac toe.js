@@ -1,29 +1,3 @@
-/*
-Two player board game (human and computer)
-3x3 grid
-The human always selects a space first to start but will be modified later in the game.
-Board starts out empty with zero populated spaces
-Players alternate selecting spaces
-A player wins when they have selected 3 spaces that form a straight line
-If all spaces are populated and nobody has won it is a tie
-
-nouns (game, player, human, computer, board (spaces), row)
-verbs (selects, wins, full)
-
-game
-board
-  full
-row
-square
-marker
-player
-  human
-  computer
-  selects
-  wins
-
-*/
-
 const rlsync = require('readline-sync');
 
 class Square {
@@ -63,7 +37,7 @@ class Board {
   }
 
   isSquareOccupied(location) {
-    return this.squares[location].isOccupied()
+    return this.squares[location].isOccupied();
   }
 
 
@@ -138,7 +112,11 @@ class TTTGame {
     this.board = new Board();
     this.human = new Human();
     this.computer = new Computer();
+    this.firstPlayer = this.human;
+    this.score = { human: 0, computer: 0 };
   }
+
+  static WINNING_SCORE = 3;
 
   static WINNING_ROWS = [
     [1, 2, 3],
@@ -155,21 +133,42 @@ class TTTGame {
     this.displayWelcomeMessage();
     this.board.display();
     while (true) {
-      this.playRound()
+      this.playRound();
+      this.updateScore();
       this.board.displayWithClear();
       this.displayResult();
-      if (this.playAgain() === false) break
+      if (this.isGameOver()) break;
+      if (this.playAgain() === false) break;
       this.resetBoard();
       this.board.displayWithClear();
+      this.switchFirstPlayer();
     }
     this.displayGoodbyeMessage();
   }
 
+  updateScore() {
+    if (this.isWinner(this.human)) this.score.human += 1;
+    if (this.isWinner(this.computer)) this.score.computer += 1;
+  }
+
+  isGameOver() {
+    return (this.score.human > TTTGame.WINNING_SCORE ||
+      this.score.computer > TTTGame.WINNING_SCORE);
+  }
+
+  otherPlayer(player) {
+    if (player === this.human) return this.computer;
+    if (player === this.computer) return this.human;
+    // I could add return undefined here to remove the ESLINT error
+    // I don't love the idea of hopefully unreachable code. Thoughts?
+  }
+
   playRound() {
     while (true) {
-      this.humanMoves();
+      this.selectMove(this.firstPlayer);
       if (this.gameOver()) break;
-      this.computerMoves();
+      this.board.displayWithClear();
+      this.selectMove(this.otherPlayer(this.firstPlayer));
       if (this.gameOver()) break;
       this.board.displayWithClear();
     }
@@ -197,6 +196,16 @@ class TTTGame {
     this.board = new Board();
   }
 
+  switchFirstPlayer() {
+    this.firstPlayer = this.otherPlayer(this.firstPlayer);
+    console.log(this.firstPlayer);
+  }
+
+  selectMove(player) {
+    if (player === this.human) this.humanMoves();
+    if (player === this.computer) this.computerMoves();
+  }
+
   humanMoves() {
     let emptySpaces = this.board.emptySquares();
     let choice;
@@ -220,11 +229,11 @@ class TTTGame {
     return string;
   }
 
-  checkWinningMove(player) {
+  winningMove(player) {
     let emptySpaces = this.board.emptySquares();
     for (let index = 0; index < emptySpaces.length; index += 1) {
       let location = emptySpaces[index];
-      this.board.markSquareAt(location, player.getMarker())
+      this.board.markSquareAt(location, player.getMarker());
       if (this.gameOver()) {
         this.board.markSquareAt(location, Square.UNUSED_SQUARE);
         return location;
@@ -242,10 +251,11 @@ class TTTGame {
 
   computerMoves() {
     const CENTER_SQUARE = 5;
-    let computerWin = this.checkWinningMove(this.computer);
-    let humanWin = this.checkWinningMove(this.human);
+    let computerWin = this.winningMove(this.computer);
+    let humanWin = this.winningMove(this.human);
     let centerSquare;
-    this.board.isSquareOccupied(CENTER_SQUARE) ? centerSquare = undefined : centerSquare = CENTER_SQUARE;
+    this.board.isSquareOccupied(CENTER_SQUARE) ?
+      centerSquare = undefined : centerSquare = CENTER_SQUARE; //ESLINT?
     let randomSelection = this.randomAvailableSquare();
     let selection = computerWin || humanWin || centerSquare || randomSelection;
     this.board.markSquareAt(selection, this.computer.getMarker());
@@ -291,6 +301,7 @@ class TTTGame {
     } else {
       console.log('This game was a tie.');
     }
+    console.log(`The score is you: ${this.score.human} | computer: ${this.score.computer}`);
   }
 
   displayGoodbyeMessage() {
