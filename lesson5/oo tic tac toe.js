@@ -62,10 +62,13 @@ class Board {
     this.display();
   }
 
-  display(welcome = false) {
-    if (welcome === false) {
-      console.log();
-    }
+  isSquareOccupied(location) {
+    return this.squares[location].isOccupied()
+  }
+
+
+  display() {
+    console.log();
     console.log(`     |     |     `);
     console.log(`  ${this.squares[1]}  |  ${this.squares[2]}  |  ${this.squares[3]}  `);
     console.log(`     |     |     `);
@@ -150,18 +153,39 @@ class TTTGame {
 
   play() {
     this.displayWelcomeMessage();
-    this.board.display(true);
+    this.board.display();
+    while (true) {
+      this.playRound()
+      this.board.displayWithClear();
+      this.displayResult();
+      if (this.playAgain() === false) break
+      this.resetBoard();
+      this.board.displayWithClear();
+    }
+    this.displayGoodbyeMessage();
+  }
+
+  playRound() {
     while (true) {
       this.humanMoves();
-      console.clear();
       if (this.gameOver()) break;
       this.computerMoves();
       if (this.gameOver()) break;
-      this.board.display();
+      this.board.displayWithClear();
     }
-    this.board.display();
-    this.displayResult();
-    this.displayGoodbyeMessage();
+  }
+
+  playAgain() {
+    const OPTIONS = ['y', 'n'];
+    const Y_INDEX = 0;
+    let choice;
+    while (true) {
+      console.log(`Would you like to play again? (y,n)`);
+      choice = rlsync.question().toLowerCase();
+      if (OPTIONS.includes(choice)) break;
+      console.log('Invalid selection.');
+    }
+    return choice === OPTIONS[Y_INDEX];
   }
 
   displayWelcomeMessage() {
@@ -169,11 +193,15 @@ class TTTGame {
     console.log('Welcome to Tic Tac Toe!');
   }
 
+  resetBoard() {
+    this.board = new Board();
+  }
+
   humanMoves() {
     let emptySpaces = this.board.emptySquares();
     let choice;
     while (true) {
-      console.log(`Please choose a square (${emptySpaces.join(', ')})`);
+      console.log(`Please choose a square (${TTTGame.joinOr(emptySpaces)})`);
       choice = parseInt(rlsync.question(), 10);
       if (emptySpaces.includes(choice)) break;
       console.log('Invalid selection.');
@@ -181,10 +209,46 @@ class TTTGame {
     this.board.markSquareAt(choice, this.human.getMarker());
   }
 
-  computerMoves() {
+  static joinOr(array) {
+    let string;
+    if (array.length > 1) {
+      string = array.slice(0, array.length - 1).join(', ');
+      string += ` or ${array[array.length - 1]}`;
+    } else {
+      string = array[0];
+    }
+    return string;
+  }
+
+  checkWinningMove(player) {
+    let emptySpaces = this.board.emptySquares();
+    for (let index = 0; index < emptySpaces.length; index += 1) {
+      let location = emptySpaces[index];
+      this.board.markSquareAt(location, player.getMarker())
+      if (this.gameOver()) {
+        this.board.markSquareAt(location, Square.UNUSED_SQUARE);
+        return location;
+      }
+      this.board.markSquareAt(location, Square.UNUSED_SQUARE);
+    }
+    return undefined;
+  }
+
+  randomAvailableSquare() {
     let emptySpaces = this.board.emptySquares();
     let index = Math.floor(Math.random() * emptySpaces.length);
-    this.board.markSquareAt(emptySpaces[index], Square.COMPUTER_MARKER);
+    return emptySpaces[index];
+  }
+
+  computerMoves() {
+    const CENTER_SQUARE = 5;
+    let computerWin = this.checkWinningMove(this.computer);
+    let humanWin = this.checkWinningMove(this.human);
+    let centerSquare;
+    this.board.isSquareOccupied(CENTER_SQUARE) ? centerSquare = undefined : centerSquare = CENTER_SQUARE;
+    let randomSelection = this.randomAvailableSquare();
+    let selection = computerWin || humanWin || centerSquare || randomSelection;
+    this.board.markSquareAt(selection, this.computer.getMarker());
   }
 
   displayBoard() {
