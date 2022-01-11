@@ -18,7 +18,7 @@ class Square {
   }
 
   isOccupied() {
-    return this.marker !== ' ';
+    return this.marker !== Square.UNUSED_SQUARE;
   }
 }
 
@@ -59,7 +59,7 @@ class Board {
   emptySquares() {
     let result = [];
     for (let key in this.squares) {
-      if (!this.squares[key].isOccupied()) result.push(Number(key));
+      if (!this.isSquareOccupied(key)) result.push(Number(key));
     }
     return result;
   }
@@ -137,7 +137,7 @@ class TTTGame {
       this.updateScore();
       this.board.displayWithClear();
       this.displayResult();
-      if (this.isGameOver()) break;
+      if (this.isMatchOver()) break;
       if (this.playAgain() === false) break;
       this.resetBoard();
       this.board.displayWithClear();
@@ -151,9 +151,9 @@ class TTTGame {
     if (this.isWinner(this.computer)) this.score.computer += 1;
   }
 
-  isGameOver() {
+  isMatchOver() {
     return (this.score.human > TTTGame.WINNING_SCORE ||
-      this.score.computer > TTTGame.WINNING_SCORE);
+      this.score.computer >= TTTGame.WINNING_SCORE);
   }
 
   otherPlayer(player) {
@@ -198,7 +198,6 @@ class TTTGame {
 
   switchFirstPlayer() {
     this.firstPlayer = this.otherPlayer(this.firstPlayer);
-    console.log(this.firstPlayer);
   }
 
   selectMove(player) {
@@ -253,26 +252,11 @@ class TTTGame {
     const CENTER_SQUARE = 5;
     let computerWin = this.winningMove(this.computer);
     let humanWin = this.winningMove(this.human);
-    let centerSquare;
-    this.board.isSquareOccupied(CENTER_SQUARE) ?
-      centerSquare = undefined : centerSquare = CENTER_SQUARE; //ESLINT?
+    let centerSquare = this.board.isSquareOccupied(CENTER_SQUARE) ?
+      undefined : CENTER_SQUARE; //ESLINT?
     let randomSelection = this.randomAvailableSquare();
     let selection = computerWin || humanWin || centerSquare || randomSelection;
     this.board.markSquareAt(selection, this.computer.getMarker());
-  }
-
-  displayBoard() {
-    console.log(`     |     |     `);
-    console.log(`  O  |  X  |  X  `);
-    console.log(`     |     |     `);
-    console.log(`-----+-----+-----`);
-    console.log(`     |     |     `);
-    console.log(`  X  |  X  |  X  `);
-    console.log(`     |     |     `);
-    console.log(`-----+-----+-----`);
-    console.log(`     |     |     `);
-    console.log(`  X  |  X  |  X  `);
-    console.log(`     |     |     `);
   }
 
   gameOver() {
