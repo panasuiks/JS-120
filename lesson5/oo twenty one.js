@@ -26,7 +26,7 @@ function Deck(quantity) {
   }
   this.shuffle();
 }
-Deck.RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
+Deck.RANKS = ['Ace', 'Ace', 'Ace', 'Ace']// ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
 Deck.SUITS = ['Hearts', 'Spades', 'Clubs', 'Diamonds'];
 const deckPrototype = {
   shuffle() {
@@ -160,12 +160,16 @@ const gamePrototype = {
 
   calcScore(player) {
     let total = 0;
-    let aceFound = false;
+    let acesFound = 0;
     for (let card of player.getCards()) {
       total += Game.CARD_VALUES[card.getRank()];
-      if (card.getRank() === 'Ace') aceFound = true;
+      if (card.getRank() === 'Ace') acesFound += true;
     }
-    if (total > Game.MAX_SCORE && aceFound) return total - 10;
+    for (let aces = 1; aces <= acesFound; aces += 1) {
+      if (total > Game.MAX_SCORE) {
+        total -= 10;
+      }
+    }
     return total;
   },
 
