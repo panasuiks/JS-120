@@ -26,7 +26,7 @@ function Deck(quantity) {
   }
   this.shuffle();
 }
-Deck.RANKS = ['Ace', 'Ace', 'Ace', 'Ace']// ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
+Deck.RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
 Deck.SUITS = ['Hearts', 'Spades', 'Clubs', 'Diamonds'];
 const deckPrototype = {
   shuffle() {
