@@ -6,14 +6,7 @@ function createHuman() {
 
   let humanObject = {
     choose() {
-      let choicesString = CHOICES[0];
-      for (let index = 1; index < CHOICES.length; index += 1) {
-        if (index === CHOICES.length - 1) {
-          choicesString += ` or ${CHOICES[index]}`;
-        } else {
-          choicesString += `, ${CHOICES[index]}`;
-        }
-      }
+      let choicesString = this.createChoicesString();
       let choice;
       while (true) {
         console.log(`Please choose ${choicesString}:`);
@@ -24,10 +17,20 @@ function createHuman() {
       this.move = choice;
       this.moveHistory[choice].count += 1;
     },
+    createChoicesString() {
+      let choicesString = CHOICES[0];
+      for (let index = 1; index < CHOICES.length; index += 1) {
+        if (index === CHOICES.length - 1) {
+          choicesString += ` or ${CHOICES[index]}`;
+        } else {
+          choicesString += `, ${CHOICES[index]}`;
+        }
+      }
+      return choicesString;
+    }
   };
 
   return Object.assign(playerObject, humanObject);
-
 }
 
 function createComputer() {
@@ -48,11 +51,11 @@ function createComputer() {
     },
 
     getThresholds() {
-      const DEFAULTODDS = 0.2;
-      const VARIABLEODDS = 0.1;
+      const DEFAULT_ODDS = 0.2;
+      const VARIABLE_ODDS = 0.1;
       let percentages = this.getLossPercentages();
       let weighted = percentages.map(percent => {
-        return DEFAULTODDS - (percent * VARIABLEODDS);
+        return DEFAULT_ODDS - (percent * VARIABLE_ODDS);
       });
       let totalWeighted = weighted.reduce((prev, current) => prev + current, 0);
       let result = 0;
@@ -79,7 +82,7 @@ function createPlayer() {
       let result = [];
       for (let choice of CHOICES) {
         let percentage = (this.moveHistory[choice].losses /
-                         this.moveHistory[choice].count) || 0;
+          this.moveHistory[choice].count) || 0;
         result.push(percentage);
       }
       return result;
@@ -198,14 +201,17 @@ const RPSGame = {
   determineAndDisplayRoundWinner() {
     let humanMove = this.human.move;
     let computerMove = this.computer.move;
+    const WINNING_INFORMATION = {
+      rock: ['scissors', 'lizard'],
+      paper: ['rock', 'spock'],
+      scissors: ['paper', 'lizard'],
+      lizard: ['spock', 'paper'],
+      spock: ['rock', 'scissors']
+    }
 
     if (humanMove === computerMove) {
       console.log('This round is a tie!');
-    } else if ((humanMove === 'rock' && (computerMove === 'scissors' || computerMove === 'lizard')) ||
-      (humanMove === 'paper' && (computerMove === 'rock' || computerMove === 'spock')) ||
-      (humanMove === 'scissors' && (computerMove === 'paper' || computerMove === 'lizard')) ||
-      (humanMove === 'lizard' && (computerMove === 'spock' || computerMove === 'paper')) ||
-      (humanMove === 'spock' && (computerMove === 'rock' || computerMove === 'scissors'))) {
+    } else if (WINNING_INFORMATION[humanMove].includes(computerMove)) {
       this.human.recordWin();
       this.computer.recordLoss();
       console.log('You won this round!');
